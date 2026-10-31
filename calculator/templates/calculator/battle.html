@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Tactical Battle Emulator - {{ team.name }}</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 25px; background-color: #181818; color: #fff; margin: 0; }
+        .container { max-width: 1250px; margin: 0 auto; }
+        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 12px; flex-wrap: wrap; gap: 15px; }
+        .back-link { color: #ffcb05; text-decoration: none; font-weight: bold; font-size: 15px; }
+        
+        /* Format Toggle Buttons */
+        .mode-switcher { display: flex; background: #2b2b2b; border-radius: 8px; padding: 4px; border: 1px solid #444; }
+        .mode-btn { background: transparent; color: #aaa; border: none; padding: 10px 18px; font-weight: bold; font-size: 14px; cursor: pointer; border-radius: 6px; transition: 0.2s; }
+        .mode-btn.active { background: #ffcb05; color: #111; }
+
+        .setup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+        .panel { background: #262626; padding: 18px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
+        .panel h2 { margin-top: 0; font-size: 18px; color: #ffcb05; border-bottom: 1px solid #444; padding-bottom: 8px; }
+        
+        .slot-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+        .slot-grid.single-col { grid-template-columns: 1fr; }
+        .slot-box { background: #333; padding: 12px; border-radius: 8px; border-left: 4px solid #4caf50; }
+        .slot-box.bench { border-left-color: #29b6f6; }
+        .slot-box.opp { border-left-color: #e53935; }
+        .slot-label { font-size: 12px; text-transform: uppercase; color: #aaa; display: block; margin-bottom: 6px; font-weight: bold; }
+        
+        select, input[type="text"] { width: 100%; padding: 9px; border-radius: 6px; border: none; font-size: 14px; background: #1e1e1e; color: #fff; box-sizing: border-box; margin-bottom: 8px; }
+        
+        .hp-control { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+        .hp-control input[type="range"] { flex: 1; accent-color: #4caf50; }
+        .hp-val { font-weight: bold; width: 42px; text-align: right; color: #81c784; }
+
+        /* Field & Turn Bar */
+        .field-bar { background: #2d2d2d; padding: 15px 20px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 20px; border: 1px solid #444; }
+        .turn-badge { background: #ffcb05; color: #111; padding: 8px 16px; border-radius: 6px; font-weight: bold; font-size: 18px; }
+        .field-toggles { display: flex; gap: 18px; align-items: center; font-size: 14px; }
+        .field-toggles label { cursor: pointer; display: flex; align-items: center; gap: 6px; }
+        
+        .btn-row { display: flex; gap: 12px; }
+        .calc-btn { background: #ffcb05; color: #111; border: none; padding: 12px 22px; font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; }
+        .advance-btn { background: #4caf50; color: #fff; border: none; padding: 12px 22px; font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; display: none; }
+        .reset-btn { background: #555; color: #fff; border: none; padding: 10px 16px; font-size: 14px; border-radius: 6px; cursor: pointer; }
+
+        /* Tactical Recommendation Output */
+        #results-box { display: none; background: #222; padding: 22px; border-radius: 12px; border-top: 4px solid #ffcb05; margin-bottom: 30px; }
+        .speed-strip { display: flex; gap: 10px; margin-bottom: 18px; flex-wrap: wrap; align-items: center; background: #162a36; padding: 12px; border-radius: 8px; border-left: 4px solid #29b6f6; }
+        .speed-pill { background: rgba(255,255,255,0.1); padding: 5px 12px; border-radius: 20px; font-size: 13px; }
+        
+        .synergy-card { background: #19331b; border: 2px solid #4caf50; padding: 18px; border-radius: 10px; margin-bottom: 20px; }
+        .synergy-title { color: #81c784; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; font-weight: bold; margin-bottom: 10px; }
+        .dual-orders { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .dual-orders.single-col { grid-template-columns: 1fr; }
+        .order-box { background: rgba(0,0,0,0.35); padding: 12px 15px; border-radius: 8px; }
+        .order-move { font-size: 20px; font-weight: bold; color: #ffcb05; margin: 4px 0; }
+        .order-reason { font-size: 13px; color: #ccc; }
+
+        .tables-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .tables-grid.single-col { grid-template-columns: 1fr; }
+        .moves-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .moves-table th, .moves-table td { padding: 9px; text-align: left; border-bottom: 1px solid #3a3a3a; }
+        .moves-table th { color: #aaa; text-transform: uppercase; font-size: 11px; }
+        
+        .match-over-banner { display: none; background: #ffcb05; color: #111; padding: 18px; border-radius: 10px; text-align: center; font-size: 22px; font-weight: bold; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="top-bar">
+        <div>
+            <a href="/builder/" class="back-link">← Back to Builder & Teams</a>
+            <h1 style="margin: 6px 0 0 0; font-size: 24px;">Tactical Battle Emulator: <span style="color: #ffcb05;">{{ team.name }}</span></h1>
+        </div>
+
+        <!-- FORMAT SWITCHER: SINGLES (3v3) vs DOUBLES (4v4) -->
+        <div class="mode-switcher">
+            <button id="btn-mode-singles" class="mode-btn" onclick="setBattleFormat('singles')">🥊 Singles (3v3: 1 Active + 2 Bench)</button>
+            <button id="btn-mode-doubles" class="mode-btn active" onclick="setBattleFormat('doubles')">⚔️ Doubles (4v4: 2 Active + 2 Bench)</button>
+        </div>
+
+        <button class="reset-btn" onclick="resetMatch()">🔄 Reset Match to Turn 1</button>
+    </div>
+
+    <div id="match-over-banner" class="match-over-banner"></div>
+
+    <!-- FIELD & TURN CONTROLS -->
+    <div class="field-bar">
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <span id="turn-badge" class="turn-badge">TURN 1</span>
+            <div class="field-toggles">
+                <label>Weather:
+                    <select id="weather-select" style="width: 120px; margin: 0;">
+                        <option value="none">Clear / None</option>
+                        <option value="rain">🌧️ Rain</option>
+                        <option value="sun">☀️ Sun</option>
+                    </select>
+                </label>
+                <label><input type="checkbox" id="trick-room-chk"> 🌀 Trick Room Active</label>
+                <label><input type="checkbox" id="tailwind-chk"> 🍃 Your Tailwind Active</label>
+            </div>
+        </div>
+        <div class="btn-row">
+            <button class="calc-btn" onclick="simulateTurn()">⚡ Emulate Turn & Find Best Play</button>
+            <button id="advance-btn" class="advance-btn" onclick="applyTurnAndAdvance()">▶️ Apply Turn Damage & Next Turn</button>
+        </div>
+    </div>
+
+    <!-- ROSTER & HP TRACKER -->
+    <div class="setup-grid">
+        <!-- LEFT: YOUR POKEMON -->
+        <div class="panel">
+            <h2 id="my-lineup-title">1. Your Pick-4 Doubles Lineup (2 Active + 2 Bench)</h2>
+            <div id="my-active-grid" class="slot-grid">
+                <div class="slot-box">
+                    <span id="label-active-a" class="slot-label">⚔️ Active Slot A</span>
+                    <select id="my-active-a">
+                        {% for m in team.members.all %}
+                            <option value="{{ m.id }}">{{ m.pokemon.name }} (@ {{ m.held_item.name|default:"None" }})</option>
+                        {% endfor %}
+                    </select>
+                    <div class="hp-control">
+                        <span>HP:</span>
+                        <input type="range" id="hp-my-a" min="0" max="100" value="100" oninput="syncHp('my-a')">
+                        <span id="val-my-a" class="hp-val">100%</span>
+                    </div>
+                </div>
+
+                <div id="box-my-active-b" class="slot-box">
+                    <span class="slot-label">⚔️ Active Slot B</span>
+                    <select id="my-active-b">
+                        {% for m in team.members.all %}
+                            <option value="{{ m.id }}" {% if forloop.counter == 2 %}selected{% endif %}>{{ m.pokemon.name }} (@ {{ m.held_item.name|default:"None" }})</option>
+                        {% endfor %}
+                    </select>
+                    <div class="hp-control">
+                        <span>HP:</span>
+                        <input type="range" id="hp-my-b" min="0" max="100" value="100" oninput="syncHp('my-b')">
+                        <span id="val-my-b" class="hp-val">100%</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="slot-grid">
+                <div class="slot-box bench">
+                    <span class="slot-label">
+                        🛡️ Bench Slot 1
+                        <button class="doubles-only-btn" onclick="swapInBench(1, 'b')" style="float:right; font-size:10px; cursor:pointer;">Swap → B</button>
+                        <button onclick="swapInBench(1, 'a')" style="float:right; font-size:10px; cursor:pointer; margin-right:4px;">Swap → A</button>
+                    </span>
+                    <select id="my-bench-1">
+                        {% for m in team.members.all %}
+                            <option value="{{ m.id }}" {% if forloop.counter == 3 %}selected{% endif %}>{{ m.pokemon.name }} (@ {{ m.held_item.name|default:"None" }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="slot-box bench">
+                    <span class="slot-label">
+                        🛡️ Bench Slot 2
+                        <button class="doubles-only-btn" onclick="swapInBench(2, 'b')" style="float:right; font-size:10px; cursor:pointer;">Swap → B</button>
+                        <button onclick="swapInBench(2, 'a')" style="float:right; font-size:10px; cursor:pointer; margin-right:4px;">Swap → A</button>
+                    </span>
+                    <select id="my-bench-2">
+                        {% for m in team.members.all %}
+                            <option value="{{ m.id }}" {% if forloop.counter == 4 %}selected{% endif %}>{{ m.pokemon.name }} (@ {{ m.held_item.name|default:"None" }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT: OPPONENT'S POKEMON -->
+        <div class="panel">
+            <h2 id="opp-lineup-title">2. Opponent's Doubles Lineup (2 Active + 2 Bench)</h2>
+            <datalist id="opp-list">
+                {% for p in pokemons %}
+                    <option value="{{ p.name }}"></option>
+                {% endfor %}
+            </datalist>
+
+            <div id="opp-active-grid" class="slot-grid">
+                <div class="slot-box opp">
+                    <span class="slot-label">🎯 Opponent Active 1</span>
+                    <input list="opp-list" type="text" id="opp-active-1" placeholder="Type Pokémon 1...">
+                    <div class="hp-control">
+                        <span>HP:</span>
+                        <input type="range" id="hp-opp-1" min="0" max="100" value="100" oninput="syncHp('opp-1')">
+                        <span id="val-opp-1" class="hp-val">100%</span>
+                    </div>
+                </div>
+
+                <div id="box-opp-active-2" class="slot-box opp">
+                    <span class="slot-label">🎯 Opponent Active 2</span>
+                    <input list="opp-list" type="text" id="opp-active-2" placeholder="Type Pokémon 2...">
+                    <div class="hp-control">
+                        <span>HP:</span>
+                        <input type="range" id="hp-opp-2" min="0" max="100" value="100" oninput="syncHp('opp-2')">
+                        <span id="val-opp-2" class="hp-val">100%</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="slot-grid">
+                <div class="slot-box bench">
+                    <span class="slot-label">
+                        👁️ Opponent Bench 1
+                        <button class="doubles-only-btn" onclick="sendInOppBench(1, 2)" style="float:right; font-size:10px; cursor:pointer;">Send → Opp 2</button>
+                        <button onclick="sendInOppBench(1, 1)" style="float:right; font-size:10px; cursor:pointer; margin-right:4px;">Send → Opp 1</button>
+                    </span>
+                    <input list="opp-list" type="text" id="opp-bench-1" placeholder="Scouted Bench 1 (Optional)...">
+                </div>
+
+                <div class="slot-box bench">
+                    <span class="slot-label">
+                        👁️ Opponent Bench 2
+                        <button class="doubles-only-btn" onclick="sendInOppBench(2, 2)" style="float:right; font-size:10px; cursor:pointer;">Send → Opp 2</button>
+                        <button onclick="sendInOppBench(2, 1)" style="float:right; font-size:10px; cursor:pointer; margin-right:4px;">Send → Opp 1</button>
+                    </span>
+                    <input list="opp-list" type="text" id="opp-bench-2" placeholder="Scouted Bench 2 (Optional)...">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TACTICAL EMULATOR RESULTS -->
+    <div id="results-box">
+        <div id="speed-strip" class="speed-strip"></div>
+
+        <div class="synergy-card">
+            <div class="synergy-title">★ Optimal Turn Strategy (Tactical Evaluation)</div>
+            <div id="orders-grid" class="dual-orders">
+                <div class="order-box">
+                    <div id="slot-a-header" style="font-size: 13px; color: #81c784; font-weight: bold;">Slot A</div>
+                    <div id="slot-a-best-move" class="order-move"></div>
+                    <div id="slot-a-reason" class="order-reason"></div>
+                </div>
+                <div id="order-box-b" class="order-box">
+                    <div id="slot-b-header" style="font-size: 13px; color: #81c784; font-weight: bold;">Slot B</div>
+                    <div id="slot-b-best-move" class="order-move"></div>
+                    <div id="slot-b-reason" class="order-reason"></div>
+                </div>
+            </div>
+            <div id="projected-board" style="margin-top: 12px; font-size: 13px; color: #ffcb05; font-weight: bold;"></div>
+        </div>
+
+        <div id="tables-container" class="tables-grid">
+            <div>
+                <h3 id="table-title-a" style="margin-top:0; font-size: 15px;">Slot A Tactical Options</h3>
+                <table class="moves-table">
+                    <thead>
+                        <tr><th>Move</th><th>Target</th><th>Tactical Score</th><th>Outcome / Reasoning</th></tr>
+                    </thead>
+                    <tbody id="tbody-a"></tbody>
+                </table>
+            </div>
+            <div id="table-box-b">
+                <h3 id="table-title-b" style="margin-top:0; font-size: 15px;">Slot B Tactical Options</h3>
+                <table class="moves-table">
+                    <thead>
+                        <tr><th>Move</th><th>Target</th><th>Tactical Score</th><th>Outcome / Reasoning</th></tr>
+                    </thead>
+                    <tbody id="tbody-b"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let battleFormat = 'doubles'; // 'singles' (3v3) or 'doubles' (4v4)
+    let currentTurn = 1;
+    let lastBestPair = null;
+    let oppKOCount = 0;
+
+    function setBattleFormat(fmt) {
+        battleFormat = fmt;
+        const isSingles = (fmt === 'singles');
+
+        document.getElementById('btn-mode-singles').classList.toggle('active', isSingles);
+        document.getElementById('btn-mode-doubles').classList.toggle('active', !isSingles);
+
+        document.getElementById('my-lineup-title').innerText = isSingles
+            ? "1. Your Pick-3 Singles Lineup (1 Active + 2 Bench)"
+            : "1. Your Pick-4 Doubles Lineup (2 Active + 2 Bench)";
+        document.getElementById('opp-lineup-title').innerText = isSingles
+            ? "2. Opponent's Singles Lineup (1 Active + 2 Bench)"
+            : "2. Opponent's Doubles Lineup (2 Active + 2 Bench)";
+
+        document.getElementById('box-my-active-b').style.display = isSingles ? 'none' : 'block';
+        document.getElementById('box-opp-active-2').style.display = isSingles ? 'none' : 'block';
+        document.getElementById('my-active-grid').classList.toggle('single-col', isSingles);
+        document.getElementById('opp-active-grid').classList.toggle('single-col', isSingles);
+
+        document.querySelectorAll('.doubles-only-btn').forEach(btn => {
+            btn.style.display = isSingles ? 'none' : 'inline-block';
+        });
+
+        resetMatch();
+    }
+
+    function syncHp(key) {
+        const val = document.getElementById('hp-' + key).value;
+        document.getElementById('val-' + key).innerText = val + '%';
+    }
+
+    function setHp(key, val) {
+        const clamped = Math.max(0, Math.min(100, Math.round(val)));
+        document.getElementById('hp-' + key).value = clamped;
+        document.getElementById('val-' + key).innerText = clamped + '%';
+    }
+
+    function swapInBench(benchNum, activeSlot) {
+        const benchSel = document.getElementById('my-bench-' + benchNum);
+        const activeSel = document.getElementById('my-active-' + activeSlot);
+        const temp = activeSel.value;
+        activeSel.value = benchSel.value;
+        benchSel.value = temp;
+        setHp('my-' + activeSlot, 100);
+        simulateTurn();
+    }
+
+    function sendInOppBench(benchNum, oppSlot) {
+        const benchInput = document.getElementById('opp-bench-' + benchNum);
+        const activeInput = document.getElementById('opp-active-' + oppSlot);
+        if (!benchInput.value.trim()) {
+            alert("Type a Pokémon into Opponent Bench " + benchNum + " first!");
+            return;
+        }
+        activeInput.value = benchInput.value;
+        benchInput.value = '';
+        setHp('opp-' + oppSlot, 100);
+        simulateTurn();
+    }
+
+    function resetMatch() {
+        currentTurn = 1;
+        oppKOCount = 0;
+        document.getElementById('turn-badge').innerText = "TURN 1";
+        document.getElementById('match-over-banner').style.display = 'none';
+        document.getElementById('results-box').style.display = 'none';
+        document.getElementById('advance-btn').style.display = 'none';
+        setHp('my-a', 100);
+        setHp('my-b', 100);
+        setHp('opp-1', 100);
+        setHp('opp-2', 100);
+    }
+
+    function simulateTurn() {
+        const isSingles = (battleFormat === 'singles');
+        const activeA = document.getElementById('my-active-a').value;
+        const activeB = document.getElementById('my-active-b').value;
+        const opp1 = document.getElementById('opp-active-1').value.trim();
+        const opp2 = document.getElementById('opp-active-2').value.trim();
+
+        if (!opp1 || (!isSingles && !opp2)) {
+            alert(isSingles
+                ? "Please enter the Opponent's Active Pokémon!"
+                : "Please enter both Opponent Active 1 and Opponent Active 2 Pokémon!");
+            return;
+        }
+
+        const payload = {
+            battle_format: battleFormat,
+            turn: currentTurn,
+            active_a_id: activeA,
+            active_b_id: activeB,
+            opp1_name: opp1,
+            opp2_name: opp2,
+            opp1_hp: document.getElementById('hp-opp-1').value,
+            opp2_hp: document.getElementById('hp-opp-2').value,
+            my_a_hp: document.getElementById('hp-my-a').value,
+            my_b_hp: document.getElementById('hp-my-b').value,
+            weather: document.getElementById('weather-select').value,
+            trick_room: document.getElementById('trick-room-chk').checked,
+            tailwind: document.getElementById('tailwind-chk').checked,
+        };
+
+        fetch('/simulate-turn/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+        .then(res => {
+            if (!res.ok) throw new Error("Check Opponent Pokémon spelling.");
+            return res.json();
+        })
+        .then(data => {
+            document.getElementById('results-box').style.display = 'block';
+            document.getElementById('advance-btn').style.display = 'inline-block';
+            lastBestPair = data.best_pair;
+
+            // Speed Strip
+            const speedStrip = document.getElementById('speed-strip');
+            speedStrip.innerHTML = '<strong>⚡ Turn Move Order:</strong> ';
+            data.speed_order.forEach((s, i) => {
+                speedStrip.innerHTML += `<span class="speed-pill">${i + 1}. ${s.name} (${s.speed} Spd)</span>`;
+            });
+
+            // Toggle Singles vs Doubles Results Layout
+            document.getElementById('order-box-b').style.display = isSingles ? 'none' : 'block';
+            document.getElementById('table-box-b').style.display = isSingles ? 'none' : 'block';
+            document.getElementById('orders-grid').classList.toggle('single-col', isSingles);
+            document.getElementById('tables-container').classList.toggle('single-col', isSingles);
+
+            if (data.best_pair) {
+                const a = data.best_pair.slot_a;
+                document.getElementById('slot-a-header').innerText = `ACTIVE: ${data.names.a}`;
+                document.getElementById('slot-a-best-move').innerText = `${a.move} → ${a.target}`;
+                document.getElementById('slot-a-reason').innerText = a.reason;
+
+                if (!isSingles && data.best_pair.slot_b) {
+                    const b = data.best_pair.slot_b;
+                    document.getElementById('slot-b-header').innerText = `SLOT B: ${data.names.b}`;
+                    document.getElementById('slot-b-best-move').innerText = `${b.move} → ${b.target}`;
+                    document.getElementById('slot-b-reason').innerText = b.reason;
+
+                    document.getElementById('projected-board').innerText = 
+                        `End of Turn Projection — ${data.names.opp1} HP: ${data.best_pair.proj_opp1_hp}% | ${data.names.opp2} HP: ${data.best_pair.proj_opp2_hp}%`;
+                } else {
+                    document.getElementById('projected-board').innerText = 
+                        `End of Turn Projection — ${data.names.opp1} HP: ${data.best_pair.proj_opp1_hp}%`;
+                }
+            }
+
+            // Tables
+            document.getElementById('table-title-a').innerText = `${data.names.a} Ranked Tactical Options`;
+            const tbodyA = document.getElementById('tbody-a');
+            tbodyA.innerHTML = '';
+            data.actions_a.forEach(act => {
+                tbodyA.innerHTML += `<tr><td><strong>${act.move}</strong></td><td>${act.target}</td><td style="color:#ffcb05;font-weight:bold;">${act.score}</td><td>${act.reason}</td></tr>`;
+            });
+
+            if (!isSingles) {
+                document.getElementById('table-title-b').innerText = `${data.names.b} Ranked Tactical Options`;
+                const tbodyB = document.getElementById('tbody-b');
+                tbodyB.innerHTML = '';
+                data.actions_b.forEach(act => {
+                    tbodyB.innerHTML += `<tr><td><strong>${act.move}</strong></td><td>${act.target}</td><td style="color:#ffcb05;font-weight:bold;">${act.score}</td><td>${act.reason}</td></tr>`;
+                });
+            }
+        })
+        .catch(err => {
+            alert("Could not simulate turn. Make sure Opponent Pokémon names match valid Pokémon in the dropdown!");
+            console.error(err);
+        });
+    }
+
+    function applyTurnAndAdvance() {
+        if (!lastBestPair) return;
+        const isSingles = (battleFormat === 'singles');
+        const targetKOs = isSingles ? 3 : 4;
+
+        const movesUsed = [lastBestPair.slot_a.move.toLowerCase()];
+        if (!isSingles && lastBestPair.slot_b) {
+            movesUsed.push(lastBestPair.slot_b.move.toLowerCase());
+        }
+
+        if (movesUsed.includes('trick room')) {
+            const tr = document.getElementById('trick-room-chk');
+            tr.checked = !tr.checked;
+        }
+        if (movesUsed.includes('tailwind')) {
+            document.getElementById('tailwind-chk').checked = true;
+        }
+
+        setHp('opp-1', lastBestPair.proj_opp1_hp);
+        setHp('my-a', lastBestPair.proj_my_a_hp);
+
+        if (!isSingles) {
+            setHp('opp-2', lastBestPair.proj_opp2_hp);
+            setHp('my-b', lastBestPair.proj_my_b_hp);
+        }
+
+        let koMsg = [];
+        if (lastBestPair.proj_opp1_hp <= 0) {
+            oppKOCount++;
+            koMsg.push("Opponent Active 1 fainted!");
+        }
+        if (!isSingles && lastBestPair.proj_opp2_hp <= 0) {
+            oppKOCount++;
+            koMsg.push("Opponent Active 2 fainted!");
+        }
+
+        const noBenchLeft = !document.getElementById('opp-bench-1').value.trim() && !document.getElementById('opp-bench-2').value.trim();
+        const allActiveFainted = isSingles ? (lastBestPair.proj_opp1_hp <= 0) : (lastBestPair.proj_opp1_hp <= 0 && lastBestPair.proj_opp2_hp <= 0);
+
+        if (oppKOCount >= targetKOs || (allActiveFainted && noBenchLeft)) {
+            const banner = document.getElementById('match-over-banner');
+            banner.style.display = 'block';
+            banner.innerText = `🏆 MATCH OVER ON TURN ${currentTurn}! (${oppKOCount}/${targetKOs} Opponent Pokémon Eliminated!)`;
+            return;
+        }
+
+        currentTurn++;
+        document.getElementById('turn-badge').innerText = "TURN " + currentTurn;
+
+        if (koMsg.length > 0) {
+            alert(`${koMsg.join(" ")} (${oppKOCount}/${targetKOs} KO'd). Click 'Send → Opp' on their Bench Pokémon (or type their next Pokémon in) before emulating Turn ${currentTurn}!`);
+        } else {
+            simulateTurn();
+        }
+    }
+</script>
+</body>
+</html>

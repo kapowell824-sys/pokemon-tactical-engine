@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Pokémon Team Builder & Command Center</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 30px; background-color: #2b2b2b; color: #fff; margin: 0; }
+        .hub-layout { display: grid; grid-template-columns: 460px 1fr; gap: 30px; max-width: 1350px; margin: 0 auto; align-items: start; }
+        
+        /* Left Column: Wizard */
+        .wizard-container { background: #3c3c3c; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); position: sticky; top: 20px; }
+        .edit-banner { display: none; background: #ff9800; color: #111; padding: 10px 15px; border-radius: 6px; font-weight: bold; margin-bottom: 15px; justify-content: space-between; align-items: center; }
+        .cancel-edit-btn { background: #222; color: #fff; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; }
+        
+        .step { display: none; }
+        .step.active { display: block; }
+        input { width: 100%; padding: 12px; margin-top: 10px; margin-bottom: 20px; border-radius: 6px; border: none; font-size: 15px; box-sizing: border-box; }
+        .btn-group { display: flex; justify-content: space-between; gap: 10px; }
+        button { background-color: #ffcb05; color: #333; border: none; padding: 11px 20px; font-weight: bold; font-size: 15px; cursor: pointer; border-radius: 6px; }
+        button.back-btn { background-color: #666; color: white; }
+        button:hover { filter: brightness(1.1); }
+        
+        /* Live Stat Previews */
+        .stats-box { padding: 12px; border-radius: 8px; margin-bottom: 15px; display: none; }
+        .base-stats { background: #222; border-left: 4px solid #4caf50; }
+        .mega-stats { background: #2a112b; border-left: 4px solid #a349a4; }
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; text-align: center; margin-top: 8px; }
+        .stat-item { background: rgba(255,255,255,0.1); padding: 6px; border-radius: 4px; font-size: 11px; text-transform: uppercase; color: #bbb; }
+        .stat-value { font-weight: bold; color: #fff; display: block; font-size: 16px; margin-top: 2px; }
+
+        /* Right Column: Teams Dashboard */
+        .teams-container h1 { margin-top: 0; color: #fff; }
+        .team-card { background: #3c3c3c; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        .team-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #555; padding-bottom: 12px; margin-bottom: 15px; flex-wrap: wrap; gap: 10px; }
+        .team-title { color: #ffcb05; margin: 0; font-size: 22px; }
+        .team-actions { display: flex; gap: 8px; align-items: center; }
+        
+        .action-btn { text-decoration: none; padding: 8px 14px; border-radius: 6px; font-weight: bold; font-size: 13px; border: none; cursor: pointer; display: inline-block; }
+        .add-pkm-btn { background-color: #29b6f6; color: #111; }
+        .battle-btn { background-color: #4caf50; color: #fff; }
+        .delete-team-btn { background-color: #e53935; color: #fff; }
+        
+        .member-row { display: flex; justify-content: space-between; align-items: center; background: #222; padding: 12px 15px; border-radius: 8px; margin-top: 10px; gap: 15px; flex-wrap: wrap; }
+        .member-info { display: flex; align-items: center; gap: 12px; min-width: 240px; }
+        .pokemon-name { font-size: 18px; font-weight: bold; color: #4caf50; }
+        .item-name { font-style: italic; color: #bbb; font-size: 14px; }
+        .moves { display: flex; gap: 6px; flex-wrap: wrap; flex: 1; }
+        .move-badge { background: #383838; padding: 4px 9px; border-radius: 4px; font-size: 13px; border: 1px solid #555; }
+        
+        .member-actions { display: flex; gap: 6px; }
+        .edit-btn { background: #ff9800; color: #111; padding: 6px 12px; font-size: 12px; border-radius: 4px; }
+        .remove-btn { background: #555; color: #fff; padding: 6px 10px; font-size: 12px; border-radius: 4px; }
+        .remove-btn:hover { background: #e53935; }
+    </style>
+</head>
+<body>
+
+<div class="hub-layout">
+    <!-- LEFT SIDE: WIZARD BUILDER -->
+    <div class="wizard-container">
+        <div id="edit-banner" class="edit-banner">
+            <span id="edit-banner-text">Editing Pokémon</span>
+            <button class="cancel-edit-btn" onclick="resetWizard()">Cancel Edit</button>
+        </div>
+
+        <!-- STEP 1: POKEMON -->
+        <div id="step-1" class="step active">
+            <h2 style="margin-top:0;">Step 1: Choose Pokémon</h2>
+            <input list="pokemon-list" id="pokemon-input" placeholder="Type to search Pokémon...">
+            <datalist id="pokemon-list">
+                {% for p in pokemons %}
+                    <option value="{{ p.name }}"></option>
+                {% endfor %}
+            </datalist>
+            <div class="btn-group">
+                <div></div> 
+                <button onclick="fetchMovesAndGoToStep2()">Next: Held Item →</button>
+            </div>
+        </div>
+
+        <!-- STEP 2: HELD ITEM -->
+        <div id="step-2" class="step">
+            <h2 style="margin-top:0;">Step 2: Choose Held Item</h2>
+            
+            <div id="base-stats-container" class="stats-box base-stats">
+                <strong id="base-name-label">Base Stats</strong>
+                <div id="base-stats-grid" class="stats-grid"></div>
+            </div>
+            
+            <div id="mega-stats-container" class="stats-box mega-stats">
+                <strong id="mega-name-label">Mega Evolved Stats</strong>
+                <div id="mega-stats-grid" class="stats-grid"></div>
+            </div>
+
+            <input list="item-list" id="item-input" placeholder="Type to search Items (e.g., Swampertite)...">
+            <datalist id="item-list">
+                {% for item in items %}
+                    <option value="{{ item.name }}"></option>
+                {% endfor %}
+            </datalist>
+            <div class="btn-group">
+                <button class="back-btn" onclick="goToStep(1)">← Back</button>
+                <button onclick="goToStep(3)">Next: Moves →</button>
+            </div>
+        </div>
+
+        <!-- STEP 3: MOVES -->
+        <div id="step-3" class="step">
+            <h2 style="margin-top:0;">Step 3: Assign Moves</h2>
+            <p id="move-status" style="font-size: 13px; color: #ffcb05;">Loading movepool...</p>
+            <datalist id="dynamic-move-list"></datalist>
+            <input list="dynamic-move-list" id="move1" placeholder="Type Move 1...">
+            <input list="dynamic-move-list" id="move2" placeholder="Type Move 2...">
+            <input list="dynamic-move-list" id="move3" placeholder="Type Move 3...">
+            <input list="dynamic-move-list" id="move4" placeholder="Type Move 4...">
+            <div class="btn-group">
+                <button class="back-btn" onclick="goToStep(2)">← Back</button>
+                <button onclick="goToStep(4)">Next: Team Name →</button>
+            </div>
+        </div>
+
+        <!-- STEP 4: TEAM CREATION -->
+        <div id="step-4" class="step">
+            <h2 style="margin-top:0;">Step 4: Assign to Team</h2>
+            <p style="font-size: 13px; color: #bbb; margin-top:0;">Type a new team name or select an existing team below:</p>
+            <input list="existing-teams-list" type="text" id="team-name" placeholder="e.g., Swampert Rain">
+            <datalist id="existing-teams-list">
+                {% for team in teams %}
+                    <option value="{{ team.name }}"></option>
+                {% endfor %}
+            </datalist>
+            <div class="btn-group">
+                <button class="back-btn" onclick="goToStep(3)">← Back</button>
+                <button id="save-btn" onclick="saveTeam()">💾 Save to Team</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- RIGHT SIDE: LIVE TEAM MANAGER -->
+    <div class="teams-container">
+        <h1>My Competitive Teams</h1>
+
+        {% if teams %}
+            {% for team in teams %}
+                <div class="team-card">
+                    <div class="team-header">
+                        <h2 class="team-title">{{ team.name }}</h2>
+                        <div class="team-actions">
+                            <button class="action-btn add-pkm-btn" data-team="{{ team.name }}" onclick="quickAddFromBtn(this)">+ Add Pokémon</button>
+                            <a href="/battle/{{ team.id }}/" class="action-btn battle-btn">⚔️ Battle Assistant</a>
+                            <button class="action-btn delete-team-btn" data-id="{{ team.id }}" data-team="{{ team.name }}" onclick="deleteTeamFromBtn(this)">🗑️ Delete Team</button>
+                        </div>
+                    </div>
+                    
+                    {% for member in team.members.all %}
+                        <div class="member-row">
+                            <div class="member-info">
+                                <span class="pokemon-name">{{ member.pokemon.name }}</span>
+                                <span class="item-name">@ {{ member.held_item.name|default:"No Item" }}</span>
+                            </div>
+                            <div class="moves">
+                                {% if member.move1 %}<span class="move-badge">{{ member.move1.name }}</span>{% endif %}
+                                {% if member.move2 %}<span class="move-badge">{{ member.move2.name }}</span>{% endif %}
+                                {% if member.move3 %}<span class="move-badge">{{ member.move3.name }}</span>{% endif %}
+                                {% if member.move4 %}<span class="move-badge">{{ member.move4.name }}</span>{% endif %}
+                            </div>
+                            <div class="member-actions">
+                                <button class="edit-btn"
+                                    data-id="{{ member.id }}"
+                                    data-team="{{ team.name }}"
+                                    data-pkm="{{ member.pokemon.name }}"
+                                    data-item="{{ member.held_item.name|default:'' }}"
+                                    data-m1="{{ member.move1.name|default:'' }}"
+                                    data-m2="{{ member.move2.name|default:'' }}"
+                                    data-m3="{{ member.move3.name|default:'' }}"
+                                    data-m4="{{ member.move4.name|default:'' }}"
+                                    onclick="editMemberFromBtn(this)">✏️ Edit</button>
+                                <button class="remove-btn" data-id="{{ member.id }}" data-pkm="{{ member.pokemon.name }}" onclick="deleteMemberFromBtn(this)">✖</button>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <p style="color: #888; margin: 10px 0 0 0;">No Pokémon assigned to this team yet. Click <strong>+ Add Pokémon</strong> or <strong>🗑️ Delete Team</strong> to clean it up!</p>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="team-card">
+                <p style="color: #bbb; margin: 0;">You don't have any saved teams yet. Use the Builder on the left to create your first Pokémon!</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    let currentBasePokemon = "";
+    let editingMemberId = null;
+
+    function goToStep(stepNumber) {
+        document.querySelectorAll('.step').forEach(step => step.classList.remove('active'));
+        document.getElementById('step-' + stepNumber).classList.add('active');
+    }
+
+    function renderStats(statsArray, gridId) {
+        const grid = document.getElementById(gridId);
+        grid.innerHTML = '';
+        statsArray.forEach(s => {
+            let name = s.stat.name.replace('special-', 'Sp. ');
+            grid.innerHTML += `
+                <div class="stat-item">
+                    ${name}
+                    <span class="stat-value">${s.base_stat}</span>
+                </div>
+            `;
+        });
+    }
+
+    function checkMegaStats() {
+        const itemVal = document.getElementById('item-input').value.trim().toLowerCase();
+        if (itemVal.includes('ite') && currentBasePokemon) {
+            let searchName = currentBasePokemon + '-mega';
+            if (itemVal.includes(' x')) searchName += '-x';
+            if (itemVal.includes(' y')) searchName += '-y';
+
+            fetch(`https://pokeapi.co/api/v2/pokemon/${searchName}`)
+                .then(res => {
+                    if (res.ok) return res.json();
+                    throw new Error('Not a Mega Stone');
+                })
+                .then(data => {
+                    document.getElementById('mega-name-label').innerText = data.name.toUpperCase().replace('-', ' ') + " STATS";
+                    renderStats(data.stats, 'mega-stats-grid');
+                    document.getElementById('mega-stats-container').style.display = 'block';
+                })
+                .catch(() => {
+                    document.getElementById('mega-stats-container').style.display = 'none';
+                });
+        } else {
+            document.getElementById('mega-stats-container').style.display = 'none';
+        }
+    }
+
+    function fetchMovesAndGoToStep2() {
+        const pkmName = document.getElementById('pokemon-input').value.trim().toLowerCase().replace(' ', '-');
+        if (!pkmName) {
+            alert("Please select a Pokémon first!");
+            return;
+        }
+        currentBasePokemon = pkmName;
+        goToStep(2);
+        document.getElementById('move-status').innerText = `Fetching valid moves for ${pkmName.toUpperCase()}...`;
+
+        fetch(`https://pokeapi.co/api/v2/pokemon/${pkmName}`)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('base-name-label').innerText = data.name.toUpperCase() + " (BASE)";
+                renderStats(data.stats, 'base-stats-grid');
+                document.getElementById('base-stats-container').style.display = 'block';
+                checkMegaStats();
+
+                const moveList = document.getElementById('dynamic-move-list');
+                moveList.innerHTML = ''; 
+                data.moves.forEach(m => {
+                    const cleanName = m.move.name.replace('-', ' ');
+                    const option = document.createElement('option');
+                    option.value = cleanName.charAt(0).toUpperCase() + cleanName.slice(1);
+                    moveList.appendChild(option);
+                });
+                document.getElementById('move-status').innerText = "Movepool loaded! Type to search.";
+            })
+            .catch(() => {
+                document.getElementById('move-status').innerText = "Failed to load data. Check spelling.";
+            });
+    }
+
+    document.getElementById('item-input').addEventListener('input', checkMegaStats);
+
+    function quickAddFromBtn(btn) {
+        resetWizard();
+        document.getElementById('team-name').value = btn.dataset.team;
+        document.getElementById('pokemon-input').focus();
+    }
+
+    function editMemberFromBtn(btn) {
+        editingMemberId = btn.dataset.id;
+        document.getElementById('team-name').value = btn.dataset.team;
+        document.getElementById('pokemon-input').value = btn.dataset.pkm;
+        document.getElementById('item-input').value = btn.dataset.item;
+        document.getElementById('move1').value = btn.dataset.m1;
+        document.getElementById('move2').value = btn.dataset.m2;
+        document.getElementById('move3').value = btn.dataset.m3;
+        document.getElementById('move4').value = btn.dataset.m4;
+
+        document.getElementById('edit-banner').style.display = 'flex';
+        document.getElementById('edit-banner-text').innerText = `✏️ Editing ${btn.dataset.pkm} (${btn.dataset.team})`;
+        document.getElementById('save-btn').innerText = "💾 Update Pokémon";
+        
+        goToStep(1);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function resetWizard() {
+        editingMemberId = null;
+        document.getElementById('pokemon-input').value = '';
+        document.getElementById('item-input').value = '';
+        document.getElementById('move1').value = '';
+        document.getElementById('move2').value = '';
+        document.getElementById('move3').value = '';
+        document.getElementById('move4').value = '';
+        document.getElementById('team-name').value = '';
+        document.getElementById('edit-banner').style.display = 'none';
+        document.getElementById('save-btn').innerText = "💾 Save to Team";
+        goToStep(1);
+    }
+
+    function saveTeam() {
+        const payload = {
+            member_id: editingMemberId,
+            team_name: document.getElementById('team-name').value.trim(),
+            pokemon_name: document.getElementById('pokemon-input').value.trim(),
+            item_name: document.getElementById('item-input').value.trim(),
+            moves: [
+                document.getElementById('move1').value.trim(),
+                document.getElementById('move2').value.trim(),
+                document.getElementById('move3').value.trim(),
+                document.getElementById('move4').value.trim()
+            ]
+        };
+
+        if (!payload.team_name || !payload.pokemon_name) {
+            alert("You must provide a Team Name and a Pokémon!");
+            return;
+        }
+
+        fetch('/save-team/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+        .then(async response => {
+            if (!response.ok) {
+                const text = await response.text();
+                throw new Error(text);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.status === 'success') {
+                window.location.reload();
+            }
+        })
+        .catch(error => {
+            alert("Failed to save! Ensure your Pokémon name matches the dropdown list.");
+            console.error("Save Error:", error);
+        });
+    }
+
+    function deleteTeamFromBtn(btn) {
+        const teamId = btn.dataset.id;
+        const teamName = btn.dataset.team;
+        if (!confirm(`Delete the entire team "${teamName}"?`)) return;
+        fetch(`/delete-team/${teamId}/`, { method: 'POST' })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') window.location.reload();
+            });
+    }
+
+    function deleteMemberFromBtn(btn) {
+        const memberId = btn.dataset.id;
+        const pkmName = btn.dataset.pkm;
+        if (!confirm(`Remove ${pkmName} from this team?`)) return;
+        fetch(`/delete-member/${memberId}/`, { method: 'POST' })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') window.location.reload();
+            });
+    }
+</script>
+</body>
+</html>
