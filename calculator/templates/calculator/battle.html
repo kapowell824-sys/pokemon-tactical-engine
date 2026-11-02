@@ -5,11 +5,10 @@
     <title>Tactical Battle Emulator - {{ team.name }}</title>
     <style>
         body { font-family: Arial, sans-serif; padding: 25px; background-color: #181818; color: #fff; margin: 0; }
-        .container { max-width: 1250px; margin: 0 auto; }
+        .container { max-width: 1320px; margin: 0 auto; }
         .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 12px; flex-wrap: wrap; gap: 15px; }
         .back-link { color: #ffcb05; text-decoration: none; font-weight: bold; font-size: 15px; }
         
-        /* Format Toggle Buttons */
         .mode-switcher { display: flex; background: #2b2b2b; border-radius: 8px; padding: 4px; border: 1px solid #444; }
         .mode-btn { background: transparent; color: #aaa; border: none; padding: 10px 18px; font-weight: bold; font-size: 14px; cursor: pointer; border-radius: 6px; transition: 0.2s; }
         .mode-btn.active { background: #ffcb05; color: #111; }
@@ -25,25 +24,43 @@
         .slot-box.opp { border-left-color: #e53935; }
         .slot-label { font-size: 12px; text-transform: uppercase; color: #aaa; display: block; margin-bottom: 6px; font-weight: bold; }
         
-        select, input[type="text"] { width: 100%; padding: 9px; border-radius: 6px; border: none; font-size: 14px; background: #1e1e1e; color: #fff; box-sizing: border-box; margin-bottom: 8px; }
+        select, input[type="text"] { width: 100%; padding: 8px; border-radius: 6px; border: none; font-size: 13px; background: #1e1e1e; color: #fff; box-sizing: border-box; margin-bottom: 8px; }
         
-        .hp-control { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+        .hp-control { display: flex; align-items: center; gap: 8px; font-size: 13px; margin-bottom: 8px; }
         .hp-control input[type="range"] { flex: 1; accent-color: #4caf50; }
         .hp-val { font-weight: bold; width: 42px; text-align: right; color: #81c784; }
+
+        /* Opponent Mega & Turn Order Sub-Row */
+        .opp-toggles-row { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 6px; }
+        .mega-select { background: #2a112b !important; border: 1px solid #a349a4 !important; color: #f3e5f5 !important; font-weight: bold; margin-bottom: 0 !important; }
+        .order-select { background: #162a36 !important; border: 1px solid #29b6f6 !important; color: #e1f5fe !important; margin-bottom: 0 !important; }
+
+        /* Opponent Move Logger & Scouted Badges */
+        .opp-move-logger { background: #222; padding: 8px; border-radius: 6px; margin-top: 6px; border: 1px solid #444; }
+        .opp-move-row { display: grid; grid-template-columns: 1fr 95px; gap: 6px; }
+        .scouted-box { margin-top: 6px; display: flex; gap: 5px; flex-wrap: wrap; align-items: center; min-height: 22px; }
+        .scout-badge { background: #b71c1c; color: #fff; font-size: 11px; padding: 3px 8px; border-radius: 12px; font-weight: bold; }
+
+        .enemy-dmg-bar { background: #3a1818; border: 1px solid #e53935; padding: 10px 14px; border-radius: 8px; margin-top: 10px; display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .apply-enemy-btn { background: #e53935; color: #fff; border: none; padding: 8px 14px; border-radius: 6px; font-weight: bold; font-size: 12px; cursor: pointer; }
+        .apply-enemy-btn:hover { filter: brightness(1.15); }
 
         /* Field & Turn Bar */
         .field-bar { background: #2d2d2d; padding: 15px 20px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 20px; border: 1px solid #444; }
         .turn-badge { background: #ffcb05; color: #111; padding: 8px 16px; border-radius: 6px; font-weight: bold; font-size: 18px; }
-        .field-toggles { display: flex; gap: 18px; align-items: center; font-size: 14px; }
-        .field-toggles label { cursor: pointer; display: flex; align-items: center; gap: 6px; }
+        .field-toggles { display: flex; gap: 14px; align-items: center; font-size: 13px; flex-wrap: wrap; }
+        .toggle-pill { background: #1e1e1e; padding: 6px 10px; border-radius: 6px; border: 1px solid #444; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+        .toggle-pill.enemy { border-color: #e53935; color: #ff8a80; }
+        .toggle-pill.ally { border-color: #4caf50; color: #a5d6a7; }
+        .toggle-pill.shared { border-color: #ce93d8; color: #f3e5f5; }
         
-        .btn-row { display: flex; gap: 12px; }
-        .calc-btn { background: #ffcb05; color: #111; border: none; padding: 12px 22px; font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; }
-        .advance-btn { background: #4caf50; color: #fff; border: none; padding: 12px 22px; font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; display: none; }
-        .reset-btn { background: #555; color: #fff; border: none; padding: 10px 16px; font-size: 14px; border-radius: 6px; cursor: pointer; }
+        .btn-row { display: flex; gap: 10px; flex-wrap: wrap; }
+        .calc-btn { background: #ffcb05; color: #111; border: none; padding: 11px 18px; font-size: 15px; font-weight: bold; border-radius: 8px; cursor: pointer; }
+        .advance-btn { background: #4caf50; color: #fff; border: none; padding: 11px 18px; font-size: 15px; font-weight: bold; border-radius: 8px; cursor: pointer; display: none; }
+        .reset-btn { background: #555; color: #fff; border: none; padding: 9px 14px; font-size: 13px; border-radius: 6px; cursor: pointer; }
 
         /* Tactical Recommendation Output */
-        #results-box { display: none; background: #222; padding: 22px; border-radius: 12px; border-top: 4px solid #ffcb05; margin-bottom: 30px; }
+        #results-box { display: none; background: #222; padding: 22px; border-radius: 12px; border-top: 4px solid #ffcb05; margin-bottom: 25px; }
         .speed-strip { display: flex; gap: 10px; margin-bottom: 18px; flex-wrap: wrap; align-items: center; background: #162a36; padding: 12px; border-radius: 8px; border-left: 4px solid #29b6f6; }
         .speed-pill { background: rgba(255,255,255,0.1); padding: 5px 12px; border-radius: 20px; font-size: 13px; }
         
@@ -61,6 +78,9 @@
         .moves-table th, .moves-table td { padding: 9px; text-align: left; border-bottom: 1px solid #3a3a3a; }
         .moves-table th { color: #aaa; text-transform: uppercase; font-size: 11px; }
         
+        /* Saved Battle Log */
+        .battle-log-panel { background: #262626; padding: 18px; border-radius: 12px; border-left: 4px solid #ffcb05; }
+        .log-entry { background: #1e1e1e; padding: 10px 14px; border-radius: 6px; margin-bottom: 8px; font-size: 13px; border-bottom: 1px solid #333; }
         .match-over-banner { display: none; background: #ffcb05; color: #111; padding: 18px; border-radius: 10px; text-align: center; font-size: 22px; font-weight: bold; margin-bottom: 20px; }
     </style>
 </head>
@@ -73,7 +93,6 @@
             <h1 style="margin: 6px 0 0 0; font-size: 24px;">Tactical Battle Emulator: <span style="color: #ffcb05;">{{ team.name }}</span></h1>
         </div>
 
-        <!-- FORMAT SWITCHER: SINGLES (3v3) vs DOUBLES (4v4) -->
         <div class="mode-switcher">
             <button id="btn-mode-singles" class="mode-btn" onclick="setBattleFormat('singles')">🥊 Singles (3v3: 1 Active + 2 Bench)</button>
             <button id="btn-mode-doubles" class="mode-btn active" onclick="setBattleFormat('doubles')">⚔️ Doubles (4v4: 2 Active + 2 Bench)</button>
@@ -84,37 +103,38 @@
 
     <div id="match-over-banner" class="match-over-banner"></div>
 
-    <!-- FIELD & TURN CONTROLS -->
+    <!-- FIELD, TAILWIND & TRICK ROOM CONTROLS -->
     <div class="field-bar">
-        <div style="display: flex; align-items: center; gap: 15px;">
+        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
             <span id="turn-badge" class="turn-badge">TURN 1</span>
             <div class="field-toggles">
-                <label>Weather:
-                    <select id="weather-select" style="width: 120px; margin: 0;">
-                        <option value="none">Clear / None</option>
+                <label class="toggle-pill">Weather:
+                    <select id="weather-select" style="width: 110px; margin: 0; padding: 4px;" onchange="simulateTurn()">
+                        <option value="none">Clear</option>
                         <option value="rain">🌧️ Rain</option>
                         <option value="sun">☀️ Sun</option>
                     </select>
                 </label>
-                <label><input type="checkbox" id="trick-room-chk"> 🌀 Trick Room Active</label>
-                <label><input type="checkbox" id="tailwind-chk"> 🍃 Your Tailwind Active</label>
+                <label class="toggle-pill ally"><input type="checkbox" id="tailwind-chk" onchange="simulateTurn()"> 🍃 Your Tailwind</label>
+                <label class="toggle-pill enemy"><input type="checkbox" id="enemy-tailwind-chk" onchange="simulateTurn()"> 🌪️ Enemy Tailwind</label>
+                <label class="toggle-pill shared" title="Trick Room affects the whole field whether you or the enemy activated it!"><input type="checkbox" id="trick-room-chk" onchange="simulateTurn()"> 🌀 Trick Room (Shared / Enemy)</label>
             </div>
         </div>
         <div class="btn-row">
-            <button class="calc-btn" onclick="simulateTurn()">⚡ Emulate Turn & Find Best Play</button>
-            <button id="advance-btn" class="advance-btn" onclick="applyTurnAndAdvance()">▶️ Apply Turn Damage & Next Turn</button>
+            <button class="calc-btn" onclick="simulateTurn()">⚡ Emulate Turn & Best Play</button>
+            <button id="advance-btn" class="advance-btn" onclick="applyTurnAndAdvance()">▶️ Save Turn & Next Turn</button>
         </div>
     </div>
 
-    <!-- ROSTER & HP TRACKER -->
+    <!-- ROSTER, HP TRACKER & OPPONENT MOVE SCOUTER -->
     <div class="setup-grid">
         <!-- LEFT: YOUR POKEMON -->
         <div class="panel">
             <h2 id="my-lineup-title">1. Your Pick-4 Doubles Lineup (2 Active + 2 Bench)</h2>
             <div id="my-active-grid" class="slot-grid">
                 <div class="slot-box">
-                    <span id="label-active-a" class="slot-label">⚔️ Active Slot A</span>
-                    <select id="my-active-a">
+                    <span class="slot-label">⚔️ Active Slot A</span>
+                    <select id="my-active-a" onchange="simulateTurn()">
                         {% for m in team.members.all %}
                             <option value="{{ m.id }}">{{ m.pokemon.name }} (@ {{ m.held_item.name|default:"None" }})</option>
                         {% endfor %}
@@ -128,7 +148,7 @@
 
                 <div id="box-my-active-b" class="slot-box">
                     <span class="slot-label">⚔️ Active Slot B</span>
-                    <select id="my-active-b">
+                    <select id="my-active-b" onchange="simulateTurn()">
                         {% for m in team.members.all %}
                             <option value="{{ m.id }}" {% if forloop.counter == 2 %}selected{% endif %}>{{ m.pokemon.name }} (@ {{ m.held_item.name|default:"None" }})</option>
                         {% endfor %}
@@ -170,38 +190,112 @@
             </div>
         </div>
 
-        <!-- RIGHT: OPPONENT'S POKEMON -->
+        <!-- RIGHT: OPPONENT'S POKEMON, MEGA TOGGLE, TURN ORDER & MOVE LOGGER -->
         <div class="panel">
-            <h2 id="opp-lineup-title">2. Opponent's Doubles Lineup (2 Active + 2 Bench)</h2>
+            <h2 id="opp-lineup-title">2. Opponent Lineup, Mega Evolution & Move Logger</h2>
             <datalist id="opp-list">
                 {% for p in pokemons %}
                     <option value="{{ p.name }}"></option>
                 {% endfor %}
             </datalist>
+            <datalist id="opp1-moves-list"></datalist>
+            <datalist id="opp2-moves-list"></datalist>
 
             <div id="opp-active-grid" class="slot-grid">
+                <!-- OPPONENT 1 -->
                 <div class="slot-box opp">
                     <span class="slot-label">🎯 Opponent Active 1</span>
-                    <input list="opp-list" type="text" id="opp-active-1" placeholder="Type Pokémon 1...">
+                    <input list="opp-list" type="text" id="opp-active-1" placeholder="Type Pokémon 1 (e.g. Metagross)..." onchange="fetchOppMovepool(1)">
+                    
+                    <!-- NEW: MEGA FORM & WHO MOVED FIRST OVERRIDE -->
+                    <div class="opp-toggles-row">
+                        <select id="opp1-mega" class="mega-select" onchange="simulateTurn()" title="Toggle Enemy Mega Evolution!">
+                            <option value="none">Base Form</option>
+                            <option value="mega">🧬 Mega Evolved!</option>
+                            <option value="mega-x">🧬 Mega X</option>
+                            <option value="mega-y">🧬 Mega Y</option>
+                        </select>
+                        <select id="opp1-order" class="order-select" onchange="simulateTurn()" title="Did this opponent move first (Choice Scarf / Priority)?">
+                            <option value="auto">⚡ Order: Auto (By Speed)</option>
+                            <option value="first">⚡ Moved 1st (Scarf/Prio)</option>
+                            <option value="last">🐢 Moved Last</option>
+                        </select>
+                    </div>
+
                     <div class="hp-control">
                         <span>HP:</span>
                         <input type="range" id="hp-opp-1" min="0" max="100" value="100" oninput="syncHp('opp-1')">
                         <span id="val-opp-1" class="hp-val">100%</span>
                     </div>
+
+                    <div class="opp-move-logger">
+                        <span style="font-size: 11px; color: #ffcb05; display: block; margin-bottom: 4px;">📝 Move Used & Target on Your Team:</span>
+                        <div class="opp-move-row">
+                            <input list="opp1-moves-list" type="text" id="opp1-move-used" placeholder="e.g. Meteor Mash, Protect..." style="margin:0;" onchange="simulateTurn()">
+                            <select id="opp1-target" style="margin:0;" onchange="simulateTurn()">
+                                <option value="a">→ Hit Slot A</option>
+                                <option value="b">→ Hit Slot B</option>
+                                <option value="field">→ Field/Self</option>
+                            </select>
+                        </div>
+                        <div class="scouted-box" id="scouted-badges-1">
+                            <span style="font-size:11px; color:#888;">Scouted Moves: None yet</span>
+                        </div>
+                    </div>
                 </div>
 
+                <!-- OPPONENT 2 -->
                 <div id="box-opp-active-2" class="slot-box opp">
                     <span class="slot-label">🎯 Opponent Active 2</span>
-                    <input list="opp-list" type="text" id="opp-active-2" placeholder="Type Pokémon 2...">
+                    <input list="opp-list" type="text" id="opp-active-2" placeholder="Type Pokémon 2..." onchange="fetchOppMovepool(2)">
+                    
+                    <!-- NEW: MEGA FORM & WHO MOVED FIRST OVERRIDE -->
+                    <div class="opp-toggles-row">
+                        <select id="opp2-mega" class="mega-select" onchange="simulateTurn()" title="Toggle Enemy Mega Evolution!">
+                            <option value="none">Base Form</option>
+                            <option value="mega">🧬 Mega Evolved!</option>
+                            <option value="mega-x">🧬 Mega X</option>
+                            <option value="mega-y">🧬 Mega Y</option>
+                        </select>
+                        <select id="opp2-order" class="order-select" onchange="simulateTurn()" title="Did this opponent move first (Choice Scarf / Priority)?">
+                            <option value="auto">⚡ Order: Auto (By Speed)</option>
+                            <option value="first">⚡ Moved 1st (Scarf/Prio)</option>
+                            <option value="last">🐢 Moved Last</option>
+                        </select>
+                    </div>
+
                     <div class="hp-control">
                         <span>HP:</span>
                         <input type="range" id="hp-opp-2" min="0" max="100" value="100" oninput="syncHp('opp-2')">
                         <span id="val-opp-2" class="hp-val">100%</span>
                     </div>
+
+                    <div class="opp-move-logger">
+                        <span style="font-size: 11px; color: #ffcb05; display: block; margin-bottom: 4px;">📝 Move Used & Target on Your Team:</span>
+                        <div class="opp-move-row">
+                            <input list="opp2-moves-list" type="text" id="opp2-move-used" placeholder="e.g. Heat Wave, Trick Room..." style="margin:0;" onchange="simulateTurn()">
+                            <select id="opp2-target" style="margin:0;" onchange="simulateTurn()">
+                                <option value="a">→ Hit Slot A</option>
+                                <option value="b">→ Hit Slot B</option>
+                                <option value="field">→ Field/Self</option>
+                            </select>
+                        </div>
+                        <div class="scouted-box" id="scouted-badges-2">
+                            <span style="font-size:11px; color:#888;">Scouted Moves: None yet</span>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div class="slot-grid">
+            <!-- INSTANT ENEMY DAMAGE PREVIEW & APPLY BAR -->
+            <div class="enemy-dmg-bar">
+                <div id="enemy-dmg-summary" style="font-size: 13px; color: #ffcdd2;">
+                    Enter opponent move(s) above and click <strong>Emulate Turn</strong> to calculate exact incoming damage on your Pokémon.
+                </div>
+                <button class="apply-enemy-btn" onclick="applyEnemyDamageNow()">💥 Apply Enemy Hits to My HP Now</button>
+            </div>
+
+            <div class="slot-grid" style="margin-top: 12px;">
                 <div class="slot-box bench">
                     <span class="slot-label">
                         👁️ Opponent Bench 1
@@ -228,7 +322,7 @@
         <div id="speed-strip" class="speed-strip"></div>
 
         <div class="synergy-card">
-            <div class="synergy-title">★ Optimal Turn Strategy (Tactical Evaluation)</div>
+            <div class="synergy-title">★ Optimal Turn Strategy (Factors in Enemy Mega Stats, Turn Order & Scouted Moves)</div>
             <div id="orders-grid" class="dual-orders">
                 <div class="order-box">
                     <div id="slot-a-header" style="font-size: 13px; color: #81c784; font-weight: bold;">Slot A</div>
@@ -265,13 +359,79 @@
             </div>
         </div>
     </div>
+
+    <!-- SAVED BATTLE TURN LOG -->
+    <div class="battle-log-panel">
+        <h3 style="margin-top: 0; color: #ffcb05;">📜 Saved Match Battle Log & Scouted History</h3>
+        <div id="battle-log-list">
+            <p style="color: #888; font-size: 13px; margin: 0;">No turns logged yet. Emulate a turn and click "Save Turn & Next Turn" to record the match!</p>
+        </div>
+    </div>
 </div>
 
 <script>
-    let battleFormat = 'doubles'; // 'singles' (3v3) or 'doubles' (4v4)
+    let battleFormat = 'doubles';
     let currentTurn = 1;
     let lastBestPair = null;
+    let lastNames = null;
     let oppKOCount = 0;
+    let enemyHitsAppliedThisTurn = false;
+
+    let scoutedMovesByPokemon = {};
+
+    function getScoutedMovesFor(pkmName) {
+        if (!pkmName) return [];
+        const key = pkmName.trim().toLowerCase();
+        return scoutedMovesByPokemon[key] || [];
+    }
+
+    function recordScoutedMove(pkmName, moveName) {
+        if (!pkmName || !moveName) return;
+        const key = pkmName.trim().toLowerCase();
+        const cleanMove = moveName.trim();
+        if (!scoutedMovesByPokemon[key]) {
+            scoutedMovesByPokemon[key] = [];
+        }
+        if (!scoutedMovesByPokemon[key].includes(cleanMove) && scoutedMovesByPokemon[key].length < 4) {
+            scoutedMovesByPokemon[key].push(cleanMove);
+        }
+        renderScoutedBadges();
+    }
+
+    function renderScoutedBadges() {
+        [1, 2].forEach(slot => {
+            const pkmName = document.getElementById('opp-active-' + slot).value.trim();
+            const box = document.getElementById('scouted-badges-' + slot);
+            const moves = getScoutedMovesFor(pkmName);
+            if (!moves.length) {
+                box.innerHTML = '<span style="font-size:11px; color:#888;">Scouted Moves: None yet</span>';
+            } else {
+                box.innerHTML = '<span style="font-size:11px; color:#aaa;">Known:</span> ' +
+                    moves.map(m => `<span class="scout-badge">${m}</span>`).join('');
+            }
+        });
+    }
+
+    function fetchOppMovepool(slot) {
+        renderScoutedBadges();
+        document.getElementById(`opp${slot}-mega`).value = 'none';
+        document.getElementById(`opp${slot}-order`).value = 'auto';
+        const rawName = document.getElementById('opp-active-' + slot).value.trim().toLowerCase().replace(' ', '-');
+        if (!rawName) return;
+        fetch(`https://pokeapi.co/api/v2/pokemon/${rawName}`)
+            .then(res => res.json())
+            .then(data => {
+                const dlist = document.getElementById(`opp${slot}-moves-list`);
+                dlist.innerHTML = '';
+                data.moves.forEach(m => {
+                    const clean = m.move.name.replace('-', ' ');
+                    const opt = document.createElement('option');
+                    opt.value = clean.charAt(0).toUpperCase() + clean.slice(1);
+                    dlist.appendChild(opt);
+                });
+            })
+            .catch(() => {});
+    }
 
     function setBattleFormat(fmt) {
         battleFormat = fmt;
@@ -284,8 +444,8 @@
             ? "1. Your Pick-3 Singles Lineup (1 Active + 2 Bench)"
             : "1. Your Pick-4 Doubles Lineup (2 Active + 2 Bench)";
         document.getElementById('opp-lineup-title').innerText = isSingles
-            ? "2. Opponent's Singles Lineup (1 Active + 2 Bench)"
-            : "2. Opponent's Doubles Lineup (2 Active + 2 Bench)";
+            ? "2. Opponent's Singles Lineup, Mega & Move Logger"
+            : "2. Opponent's Doubles Lineup, Mega & Move Logger";
 
         document.getElementById('box-my-active-b').style.display = isSingles ? 'none' : 'block';
         document.getElementById('box-opp-active-2').style.display = isSingles ? 'none' : 'block';
@@ -330,16 +490,31 @@
         activeInput.value = benchInput.value;
         benchInput.value = '';
         setHp('opp-' + oppSlot, 100);
+        fetchOppMovepool(oppSlot);
         simulateTurn();
     }
 
     function resetMatch() {
         currentTurn = 1;
         oppKOCount = 0;
+        enemyHitsAppliedThisTurn = false;
+        scoutedMovesByPokemon = {};
         document.getElementById('turn-badge').innerText = "TURN 1";
         document.getElementById('match-over-banner').style.display = 'none';
         document.getElementById('results-box').style.display = 'none';
         document.getElementById('advance-btn').style.display = 'none';
+        document.getElementById('tailwind-chk').checked = false;
+        document.getElementById('enemy-tailwind-chk').checked = false;
+        document.getElementById('trick-room-chk').checked = false;
+        document.getElementById('opp1-move-used').value = '';
+        document.getElementById('opp2-move-used').value = '';
+        document.getElementById('opp1-mega').value = 'none';
+        document.getElementById('opp2-mega').value = 'none';
+        document.getElementById('opp1-order').value = 'auto';
+        document.getElementById('opp2-order').value = 'auto';
+        document.getElementById('enemy-dmg-summary').innerHTML = 'Enter opponent move(s) above and click <strong>Emulate Turn</strong> to calculate exact incoming damage on your Pokémon.';
+        document.getElementById('battle-log-list').innerHTML = '<p style="color: #888; font-size: 13px; margin: 0;">No turns logged yet. Emulate a turn and click "Save Turn & Next Turn" to record the match!</p>';
+        renderScoutedBadges();
         setHp('my-a', 100);
         setHp('my-b', 100);
         setHp('opp-1', 100);
@@ -354,11 +529,13 @@
         const opp2 = document.getElementById('opp-active-2').value.trim();
 
         if (!opp1 || (!isSingles && !opp2)) {
-            alert(isSingles
-                ? "Please enter the Opponent's Active Pokémon!"
-                : "Please enter both Opponent Active 1 and Opponent Active 2 Pokémon!");
             return;
         }
+
+        const opp1MoveUsed = document.getElementById('opp1-move-used').value.trim();
+        const opp2MoveUsed = document.getElementById('opp2-move-used').value.trim();
+        if (opp1MoveUsed) recordScoutedMove(opp1, opp1MoveUsed);
+        if (!isSingles && opp2MoveUsed) recordScoutedMove(opp2, opp2MoveUsed);
 
         const payload = {
             battle_format: battleFormat,
@@ -367,6 +544,10 @@
             active_b_id: activeB,
             opp1_name: opp1,
             opp2_name: opp2,
+            opp1_mega: document.getElementById('opp1-mega').value,
+            opp2_mega: document.getElementById('opp2-mega').value,
+            opp1_order: document.getElementById('opp1-order').value,
+            opp2_order: document.getElementById('opp2-order').value,
             opp1_hp: document.getElementById('hp-opp-1').value,
             opp2_hp: document.getElementById('hp-opp-2').value,
             my_a_hp: document.getElementById('hp-my-a').value,
@@ -374,6 +555,13 @@
             weather: document.getElementById('weather-select').value,
             trick_room: document.getElementById('trick-room-chk').checked,
             tailwind: document.getElementById('tailwind-chk').checked,
+            enemy_tailwind: document.getElementById('enemy-tailwind-chk').checked,
+            scouted_opp1: getScoutedMovesFor(opp1),
+            scouted_opp2: getScoutedMovesFor(opp2),
+            opp1_used_move: opp1MoveUsed,
+            opp1_target: document.getElementById('opp1-target').value,
+            opp2_used_move: opp2MoveUsed,
+            opp2_target: document.getElementById('opp2-target').value,
         };
 
         fetch('/simulate-turn/', {
@@ -389,15 +577,15 @@
             document.getElementById('results-box').style.display = 'block';
             document.getElementById('advance-btn').style.display = 'inline-block';
             lastBestPair = data.best_pair;
+            lastNames = data.names;
 
-            // Speed Strip
             const speedStrip = document.getElementById('speed-strip');
             speedStrip.innerHTML = '<strong>⚡ Turn Move Order:</strong> ';
             data.speed_order.forEach((s, i) => {
-                speedStrip.innerHTML += `<span class="speed-pill">${i + 1}. ${s.name} (${s.speed} Spd)</span>`;
+                const noteBadge = s.note ? ` <span style="color:#ffcb05;">(${s.note})</span>` : '';
+                speedStrip.innerHTML += `<span class="speed-pill">${i + 1}. ${s.name} (${s.speed} Spd)${noteBadge}</span>`;
             });
 
-            // Toggle Singles vs Doubles Results Layout
             document.getElementById('order-box-b').style.display = isSingles ? 'none' : 'block';
             document.getElementById('table-box-b').style.display = isSingles ? 'none' : 'block';
             document.getElementById('orders-grid').classList.toggle('single-col', isSingles);
@@ -409,6 +597,15 @@
                 document.getElementById('slot-a-best-move').innerText = `${a.move} → ${a.target}`;
                 document.getElementById('slot-a-reason').innerText = a.reason;
 
+                // Update Enemy Damage Summary Box
+                if (data.best_pair.enemy_logs && data.best_pair.enemy_logs.length > 0) {
+                    document.getElementById('enemy-dmg-summary').innerHTML = 
+                        `<strong>💥 Calculated Enemy Damage:</strong> ${data.best_pair.enemy_logs.join(' | ')}`;
+                } else {
+                    document.getElementById('enemy-dmg-summary').innerHTML = 
+                        `No damaging opponent move entered for Turn ${currentTurn} yet.`;
+                }
+
                 if (!isSingles && data.best_pair.slot_b) {
                     const b = data.best_pair.slot_b;
                     document.getElementById('slot-b-header').innerText = `SLOT B: ${data.names.b}`;
@@ -416,14 +613,13 @@
                     document.getElementById('slot-b-reason').innerText = b.reason;
 
                     document.getElementById('projected-board').innerText = 
-                        `End of Turn Projection — ${data.names.opp1} HP: ${data.best_pair.proj_opp1_hp}% | ${data.names.opp2} HP: ${data.best_pair.proj_opp2_hp}%`;
+                        `Projected End of Turn — Your ${data.names.a}: ${data.best_pair.proj_my_a_hp}% | Your ${data.names.b}: ${data.best_pair.proj_my_b_hp}% || Opp ${data.names.opp1}: ${data.best_pair.proj_opp1_hp}% | Opp ${data.names.opp2}: ${data.best_pair.proj_opp2_hp}%`;
                 } else {
                     document.getElementById('projected-board').innerText = 
-                        `End of Turn Projection — ${data.names.opp1} HP: ${data.best_pair.proj_opp1_hp}%`;
+                        `Projected End of Turn — Your ${data.names.a}: ${data.best_pair.proj_my_a_hp}% || Opp ${data.names.opp1}: ${data.best_pair.proj_opp1_hp}%`;
                 }
             }
 
-            // Tables
             document.getElementById('table-title-a').innerText = `${data.names.a} Ranked Tactical Options`;
             const tbodyA = document.getElementById('tbody-a');
             tbodyA.innerHTML = '';
@@ -441,9 +637,28 @@
             }
         })
         .catch(err => {
-            alert("Could not simulate turn. Make sure Opponent Pokémon names match valid Pokémon in the dropdown!");
             console.error(err);
         });
+    }
+
+    function applyEnemyDamageNow() {
+        if (!lastBestPair) {
+            alert("Click 'Emulate Turn' first so the engine calculates the opponent's move damage!");
+            return;
+        }
+        if (enemyHitsAppliedThisTurn) {
+            alert("Enemy damage was already subtracted for this turn!");
+            return;
+        }
+        const curA = parseFloat(document.getElementById('hp-my-a').value);
+        setHp('my-a', Math.max(0, curA - (lastBestPair.inc_dmg_a || 0)));
+
+        if (battleFormat !== 'singles') {
+            const curB = parseFloat(document.getElementById('hp-my-b').value);
+            setHp('my-b', Math.max(0, curB - (lastBestPair.inc_dmg_b || 0)));
+        }
+        enemyHitsAppliedThisTurn = true;
+        document.getElementById('enemy-dmg-summary').innerHTML += ` <strong style="color:#81c784;">(✓ Subtracted from your HP!)</strong>`;
     }
 
     function applyTurnAndAdvance() {
@@ -451,35 +666,69 @@
         const isSingles = (battleFormat === 'singles');
         const targetKOs = isSingles ? 3 : 4;
 
-        const movesUsed = [lastBestPair.slot_a.move.toLowerCase()];
-        if (!isSingles && lastBestPair.slot_b) {
-            movesUsed.push(lastBestPair.slot_b.move.toLowerCase());
-        }
+        const opp1Name = document.getElementById('opp-active-1').value.trim();
+        const opp2Name = document.getElementById('opp-active-2').value.trim();
+        const opp1Move = document.getElementById('opp1-move-used').value.trim();
+        const opp2Move = document.getElementById('opp2-move-used').value.trim();
 
-        if (movesUsed.includes('trick room')) {
+        if (opp1Move) recordScoutedMove(opp1Name, opp1Move);
+        if (!isSingles && opp2Move) recordScoutedMove(opp2Name, opp2Move);
+
+        const myMoves = [lastBestPair.slot_a.move.toLowerCase()];
+        if (!isSingles && lastBestPair.slot_b) myMoves.push(lastBestPair.slot_b.move.toLowerCase());
+        const enemyMoves = [opp1Move.toLowerCase(), opp2Move.toLowerCase()];
+
+        if (myMoves.includes('trick room') || enemyMoves.includes('trick room')) {
             const tr = document.getElementById('trick-room-chk');
             tr.checked = !tr.checked;
         }
-        if (movesUsed.includes('tailwind')) {
+        if (myMoves.includes('tailwind')) {
             document.getElementById('tailwind-chk').checked = true;
         }
+        if (enemyMoves.includes('tailwind')) {
+            document.getElementById('enemy-tailwind-chk').checked = true;
+        }
+
+        const logContainer = document.getElementById('battle-log-list');
+        if (currentTurn === 1 && logContainer.querySelector('p')) {
+            logContainer.innerHTML = '';
+        }
+        let myLogStr = `<strong>${lastNames.a}</strong> used <strong>${lastBestPair.slot_a.move}</strong> → ${lastBestPair.slot_a.target}`;
+        if (!isSingles && lastBestPair.slot_b) {
+            myLogStr += ` | <strong>${lastNames.b}</strong> used <strong>${lastBestPair.slot_b.move}</strong> → ${lastBestPair.slot_b.target}`;
+        }
+        let oppLogStr = (lastBestPair.enemy_logs && lastBestPair.enemy_logs.length)
+            ? `<br><span style="color:#ff8a80;">Opponent Actions: ${lastBestPair.enemy_logs.join(' | ')}</span>`
+            : `<br><span style="color:#888;">(No opponent moves logged for Turn ${currentTurn})</span>`;
+
+        logContainer.innerHTML = `<div class="log-entry"><strong style="color:#ffcb05;">TURN ${currentTurn}:</strong> ${myLogStr}${oppLogStr}</div>` + logContainer.innerHTML;
+
+        document.getElementById('opp1-move-used').value = '';
+        document.getElementById('opp2-move-used').value = '';
+        document.getElementById('opp1-order').value = 'auto';
+        document.getElementById('opp2-order').value = 'auto';
 
         setHp('opp-1', lastBestPair.proj_opp1_hp);
-        setHp('my-a', lastBestPair.proj_my_a_hp);
-
+        if (!enemyHitsAppliedThisTurn) {
+            setHp('my-a', lastBestPair.proj_my_a_hp);
+        }
         if (!isSingles) {
             setHp('opp-2', lastBestPair.proj_opp2_hp);
-            setHp('my-b', lastBestPair.proj_my_b_hp);
+            if (!enemyHitsAppliedThisTurn) {
+                setHp('my-b', lastBestPair.proj_my_b_hp);
+            }
         }
+
+        enemyHitsAppliedThisTurn = false;
 
         let koMsg = [];
         if (lastBestPair.proj_opp1_hp <= 0) {
             oppKOCount++;
-            koMsg.push("Opponent Active 1 fainted!");
+            koMsg.push(`Opponent ${lastNames.opp1} fainted!`);
         }
         if (!isSingles && lastBestPair.proj_opp2_hp <= 0) {
             oppKOCount++;
-            koMsg.push("Opponent Active 2 fainted!");
+            koMsg.push(`Opponent ${lastNames.opp2} fainted!`);
         }
 
         const noBenchLeft = !document.getElementById('opp-bench-1').value.trim() && !document.getElementById('opp-bench-2').value.trim();
@@ -496,7 +745,7 @@
         document.getElementById('turn-badge').innerText = "TURN " + currentTurn;
 
         if (koMsg.length > 0) {
-            alert(`${koMsg.join(" ")} (${oppKOCount}/${targetKOs} KO'd). Click 'Send → Opp' on their Bench Pokémon (or type their next Pokémon in) before emulating Turn ${currentTurn}!`);
+            alert(`${koMsg.join(" ")} (${oppKOCount}/${targetKOs} KO'd). Send in their Bench replacement before emulating Turn ${currentTurn}!`);
         } else {
             simulateTurn();
         }
